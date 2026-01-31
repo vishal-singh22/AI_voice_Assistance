@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}View Candidates{% endblock %}
+
+{% block nav_links %}
+<a href="/admin" class="nav-link">Dashboard</a>
+<a href="/admin/create-interview" class="nav-link">Create Interview</a>
+<a href="/admin/candidates" class="nav-link active">View Candidates</a>
+{% endblock %}
+
+{% block content %}
+<div class="candidates-container">
+    <div class="page-header">
+        <h1>Candidates</h1>
+        <button onclick="loadCandidates()" class="btn btn-secondary">🔄 Refresh</button>
+    </div>
+
+    <div id="candidatesTable" class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Questions</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="candidatesBody">
+                {% for candidate in candidates %}
+                <tr>
+                    <td>{{ candidate.name }}</td>
+                    <td>{{ candidate.email }}</td>
+                    <td>{{ candidate.role }}</td>
+                    <td>{{ candidate.total_questions }}</td>
+                    <td>
+                        {% if candidate.completed %}
+                        <span class="score-badge">{{ candidate.score }}%</span>
+                        {% else %}
+                        <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if candidate.completed %}
+                            {% if candidate.passed %}
+                            <span class="status-badge status-pass">PASS</span>
+                            {% else %}
+                            <span class="status-badge status-fail">FAIL</span>
+                            {% endif %}
+                        {% else %}
+                        <span class="status-badge status-pending">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button onclick="viewDetails({{ candidate.id }})" class="btn-icon" title="View Details">👁️</button>
+                        <button onclick="deleteCandidate({{ candidate.id }})" class="btn-icon" title="Remove">🗑️</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="detailsModal" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div id="candidateDetails"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadCandidates() {
+    try {
+        const response = await fetch('/admin/api/candidates');
+        const candidates = await response.json();
+        
+        const tbody = document.getElementById('candidatesBody');
+        tbody.innerHTML = candidates.map(c => `
+            <tr>
+                <td>${c.name}</td>
+                <td>${c.email}</td>
+                <td>${c.role}</td>
+                <td>${c.total_questions}</td>
+                <td>${c.completed ? `<span class="score-badge">${c.score}%</span>` : '<span class="text-muted">N/A</span>'}</td>
+                <td>${c.completed ? (c.passed ? '<span class="status-badge status-pass">PASS</span>' : '<span class="status-badge status-fail">FAIL</span>') : '<span class="status-badge status-pending">Pending</span>'}</td>
+                <td>
+                    <button onclick="viewDetails(${c.id})" class="btn-icon" title="View Details">👁️</button>
+                    <button onclick="deleteCandidate(${c.id})" class="btn-icon" title="Remove">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        alert('Error loading candidates: ' + error.message);
+    }
+}
+
+async function viewDetails(candidateId) {
+    try {
+        const response = await fetch(`/admin/api/candidates/${candidateId}/details`);
+        const data = await response.json();
+        
+        const html = `
+            <h2>Candidate Details</h2>
+            <div class="details-grid">
+                <div><strong>Name:</strong> ${data.candidate.name}</div>
+                <div><strong>Email:</strong> ${data.candidate.email}</div>
+                <div><strong>Role:</strong> ${data.candidate.role}</div>
+                <div><strong>Score:</strong> ${data.candidate.score}%</div>
+                <div><strong>Result:</strong> ${data.candidate.passed ? '<span class="status-pass">PASS</span>' : '<span class="status-fail">FAIL</span>'}</div>
+            </div>
+            
+            <h3>Interview Responses</h3>
+            <div class="responses-list">
+                ${data.responses.map((r, i) => `
+                    <div class="response-item">
+                        <h4>Question ${i + 1}</h4>
+                        <p><strong>Q:</strong> ${r.question}</p>
+                        <p><strong>A:</strong> ${r.answer}</p>
+                        <p><strong>Score:</strong> ${r.score}% | <strong>Keywords Found:</strong> ${r.keywords_found.join(', ') || 'None'}</p>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        document.getElementById('candidateDetails').innerHTML = html;
+        document.getElementById('detailsModal').style.display = 'flex';
+    } catch (error) {
+        alert('Error loading details: ' + error.message);
+    }
+}
+
+async function deleteCandidate(candidateId) {
+    if (!confirm('Are you sure you want to remove this candidate?')) return;
+    
+    try {
+        await fetch(`/admin/api/candidates/${candidateId}`, {method: 'DELETE'});
+        loadCandidates();
+    } catch (error) {
+        alert('Error deleting candidate: ' + error.message);
+    }
+}
+
+function closeModal() {
+    document.getElementById('detailsModal').style.display = 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Voice Interview{% endblock %}
+
+{% block content %}
+<div class="interview-container">
+    <div class="interview-box">
+        <div class="interview-header">
+            <h2>Voice Interview in Progress</h2>
+            <div class="question-counter">
+                Question <span id="currentQuestion">-</span> of <span id="totalQuestions">-</span>
+            </div>
+        </div>
+
+        <div class="interview-status">
+            <div id="statusIndicator" class="status-indicator status-connecting">
+                <span class="status-dot"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </div>
+
+        <!-- Voice Visualizer -->
+        <div class="voice-visualizer-container">
+            <canvas id="voiceVisualizer"></canvas>
+            <p class="visualizer-label">🎤 Voice Activity</p>
+        </div>
+
+        <div class="question-display">
+            <h3>Current Question:</h3>
+            <div id="questionText" class="question-text">
+                Initializing interview...
+            </div>
+        </div>
+
+        <div class="transcript-display">
+            <h3>Your Response:</h3>
+            <div id="transcriptText" class="transcript-text">
+                Waiting for your answer...
+            </div>
+        </div>
+
+        <div class="interview-controls">
+            <button id="endButton" class="btn btn-danger" onclick="endInterview()" disabled>
+                End Interview
+            </button>
+        </div>
+
+        <div class="interview-tips">
+            <p>💡 <strong>Tip:</strong> Speak clearly and naturally. The system will detect when you finish speaking.</p>
+            <p>⏱️ <strong>Note:</strong> You have 60 seconds to answer each question.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Voice Visualizer Styles */
+.voice-visualizer-container {
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-radius: 12px;
+    border: 2px solid #334155;
+}
+
+#voiceVisualizer {
+    width: 100%;
+    height: 60px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.visualizer-label {
+    margin-top: 10px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Enhanced Status Indicators */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-connecting {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-connecting .status-dot {
+    background: #f59e0b;
+}
+
+.status-connected {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-connected .status-dot {
+    background: #10b981;
+}
+
+.status-listening {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-listening .status-dot {
+    background: #3b82f6;
+    animation: pulse 1s infinite;
+}
+
+.status-speaking {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.status-speaking .status-dot {
+    background: #6366f1;
+}
+
+.status-processing {
+    background: #fce7f3;
+    color: #9f1239;
+}
+
+.status-processing .status-dot {
+    background: #ec4899;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.status-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-success .status-dot {
+    background: #10b981;
+}
+
+.status-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-warning .status-dot {
+    background: #f59e0b;
+}
+
+.status-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-error .status-dot {
+    background: #ef4444;
+}
+
+.status-complete {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-complete .status-dot {
+    background: #10b981;
+    animation: none;
+}
+
+/* Transcript Display Enhancement */
+.transcript-display {
+    margin: 24px 0;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+}
+
+.transcript-display h3 {
+    margin: 0 0 12px 0;
+    color: #334155;
+    font-size: 16px;
+}
+
+.transcript-text {
+    min-height: 100px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* Question Display Enhancement */
+.question-display {
+    margin: 24px 0;
+    padding: 24px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+}
+
+.question-display h3 {
+    margin: 0 0 12px 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.question-text {
+    color: white;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+/* Interview Tips */
+.interview-tips {
+    margin-top: 24px;
+    padding: 16px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.interview-tips p {
+    margin: 8px 0;
+    color: #475569;
+    font-size: 14px;
+}
+
+.interview-tips strong {
+    color: #1e293b;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/interview.js"></script>
+<script>
+const candidateId = {{ candidate_id }};
+initializeInterview(candidateId);
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block nav_links %}
+<a href="/admin" class="nav-link active">Dashboard</a>
+<a href="/admin/create-interview" class="nav-link">Create Interview</a>
+<a href="/admin/candidates" class="nav-link">View Candidates</a>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Manage interviews and monitor candidates</p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-icon">📝</div>
+        <h3>Create Interview</h3>
+        <p>Set up a new interview with custom questions</p>
+        <a href="/admin/create-interview" class="btn btn-primary">Create New</a>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-icon">👥</div>
+        <h3>View Candidates</h3>
+        <p>Monitor candidate progress and results</p>
+        <a href="/admin/candidates" class="btn btn-primary">View All</a>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-icon">📊</div>
+        <h3>System Status</h3>
+        <p>All systems operational</p>
+        <span class="status-badge status-active">Active</span>
+    </div>
+</div>
+
+<div class="info-section">
+    <h2>Quick Guide</h2>
+    <div class="guide-steps">
+        <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+                <h4>Create Interview</h4>
+                <p>Define interview parameters and question settings</p>
+            </div>
+        </div>
+        <div class="step">
+            <span class="step-number">2</span>
+            <div class="step-content">
+                <h4>Share Credentials</h4>
+                <p>Send generated email and password to candidate</p>
+            </div>
+        </div>
+        <div class="step">
+            <span class="step-number">3</span>
+            <div class="step-content">
+                <h4>Monitor Results</h4>
+                <p>View candidate scores and performance metrics</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

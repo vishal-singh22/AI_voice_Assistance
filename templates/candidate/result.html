@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Results{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="results-box">
+        <div class="results-header">
+            <h1>Interview Complete!</h1>
+            <p class="subtitle">{{ interview.role.replace('_', ' ').title() }} Position</p>
+        </div>
+
+        <div class="score-display">
+            <div class="score-circle {% if candidate.passed %}score-pass{% else %}score-fail{% endif %}">
+                <div class="score-value">{{ candidate.score }}%</div>
+                <div class="score-label">Final Score</div>
+            </div>
+            
+            <div class="result-badge {% if candidate.passed %}badge-pass{% else %}badge-fail{% endif %}">
+                {% if candidate.passed %}
+                ✅ PASS
+                {% else %}
+                ❌ FAIL
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="results-summary">
+            <div class="summary-item">
+                <h3>{{ candidate.name }}</h3>
+                <p>Candidate Name</p>
+            </div>
+            <div class="summary-item">
+                <h3>{{ candidate.email }}</h3>
+                <p>Email</p>
+            </div>
+            <div class="summary-item">
+                <h3>{{ responses|length }}</h3>
+                <p>Questions Answered</p>
+            </div>
+        </div>
+
+        <div class="results-details">
+            <h2>Question Breakdown</h2>
+            {% for response in responses %}
+            <div class="response-card">
+                <div class="response-header">
+                    <h3>Question {{ loop.index }}</h3>
+                    <span class="response-score">{{ response.score }}%</span>
+                </div>
+                <div class="response-content">
+                    <p><strong>Q:</strong> {{ response.question_text }}</p>
+                    <p><strong>Your Answer:</strong> {{ response.answer_text }}</p>
+                    {% if response.keywords_found %}
+                    <p class="keywords-found">
+                        <strong>Keywords Matched:</strong>
+                        {% for keyword in response.keywords_found %}
+                        <span class="keyword-badge">{{ keyword }}</span>
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="results-footer">
+            {% if candidate.passed %}
+            <p class="success-message">
+                Congratulations! You have successfully passed the interview. 
+                Your results have been recorded and will be reviewed by our team.
+            </p>
+            {% else %}
+            <p class="fail-message">
+                Thank you for participating. Unfortunately, you did not meet the passing threshold of 70%. 
+                Please contact us if you have any questions.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

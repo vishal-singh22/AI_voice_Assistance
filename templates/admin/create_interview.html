@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Create Interview{% endblock %}
+
+{% block nav_links %}
+<a href="/admin" class="nav-link">Dashboard</a>
+<a href="/admin/create-interview" class="nav-link active">Create Interview</a>
+<a href="/admin/candidates" class="nav-link">View Candidates</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Create New Interview</h1>
+    <p class="form-description">Configure interview settings and generate candidate credentials</p>
+
+    <form id="createInterviewForm" class="interview-form">
+        <div class="form-group">
+            <label for="name">Interview Name *</label>
+            <input type="text" id="name" name="name" required 
+                   placeholder="e.g., Q1 2024 Software Engineer Interview">
+        </div>
+
+        <div class="form-group">
+            <label for="candidate_name">Candidate Name *</label>
+            <input type="text" id="candidate_name" name="candidate_name" required 
+                placeholder="e.g., your name">
+        </div>
+
+
+        <div class="form-group">
+            <label for="candidate_email">Candidate Email *</label>
+            <input type="email" id="candidate_email" name="candidate_email" required 
+                placeholder="e.g., sarah.johnson@gmail.com">
+            <small>Used to contact candidate about results</small>
+        </div>
+
+
+        <div class="form-group">
+            <label for="role">Role *</label>
+            <select id="role" name="role" required>
+                <option value="">Select a role...</option>
+                <option value="software_engineer">Software Engineer</option>
+                <option value="data_scientist">Data Scientist</option>
+                <option value="product_manager">Product Manager</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="num_questions">Number of Questions *</label>
+            <input type="number" id="num_questions" name="num_questions" 
+                   min="1" max="20" value="5" required>
+            <small>Recommended: 5-10 questions</small>
+        </div>
+
+        <div class="form-group">
+            <div class="toggle-container">
+                <!-- Toggle only -->
+                <label class="toggle-switch">
+                    <input type="checkbox" id="use_llm" name="use_llm">
+                    <span class="toggle-slider"></span>
+                </label>
+
+                <!-- Text (not clickable) -->
+                <span class="toggle-text">Use LLM-Generated Questions</span>
+            </div>
+
+            <small>OFF = Database questions | ON = AI-generated questions</small>
+        </div>
+
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Interview</button>
+            <a href="/admin" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+
+    <div id="resultModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>✅ Interview Created Successfully!</h2>
+            <div class="credentials-box">
+                <h3>Candidate Credentials</h3>
+                <p><strong>Email:</strong> <span id="candidateEmail"></span></p>
+                <p><strong>Password:</strong> <span id="candidatePassword"></span></p>
+                <p><strong>Interview URL:</strong> <span id="interviewUrl"></span></p>
+            </div>
+            <div class="modal-actions">
+                <button onclick="copyCredentials()" class="btn btn-secondary">Copy All</button>
+                <a href="/admin/candidates" class="btn btn-primary">View Candidates</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('createInterviewForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+    
+    const formData = {
+        name: document.getElementById('name').value,
+        candidate_name: document.getElementById('candidate_name').value,
+        candidate_email: document.getElementById('candidate_email').value,
+        role: document.getElementById('role').value,
+        num_questions: parseInt(document.getElementById('num_questions').value),
+        use_llm: document.getElementById('use_llm').checked
+    };
+    
+    try {
+        const response = await fetch('/admin/api/interviews', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('candidateEmail').textContent = result.candidate.email;
+            document.getElementById('candidatePassword').textContent = result.candidate.password;
+            document.getElementById('interviewUrl').textContent = result.candidate.interview_url;
+            document.getElementById('resultModal').style.display = 'flex';
+        } else {
+            alert('Error: ' + (result.message || 'Failed to create interview'));
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Interview';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error creating interview: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Interview';
+    }
+});
+
+function copyCredentials() {
+    const email = document.getElementById('candidateEmail').textContent;
+    const password = document.getElementById('candidatePassword').textContent;
+    const url = document.getElementById('interviewUrl').textContent;
+    
+    const text = `Interview Credentials\nEmail: ${email}\nPassword: ${password}\nURL: ${url}`;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Credentials copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
+    });
+}
+</script>
+{% endblock %}

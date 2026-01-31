@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Login{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <div class="login-header">
+            <h1>🎤 Voice Interview</h1>
+            <p>Enter your credentials to begin</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/candidate/login" class="login-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="your.email@interview.local">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="Enter your password">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                Login to Interview
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>Need help? Contact your administrator</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
