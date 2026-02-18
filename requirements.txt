@@ -15,7 +15,7 @@ python-dotenv==1.0.0
 
 # AI Services
 groq==0.4.2
-deepgram-sdk=4.1.0
+deepgram-sdk==4.1.0
 
 # HTTP Client
 httpx==0.26.0
